@@ -1,70 +1,46 @@
-<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js?v=1"></script>
+
+<script src="https://unpkg.com/tone"></script>
 <script>
-  /* global nn */
-  
-  // NOTE: this will not work on the web until the user clicks on a button. 
-  const filename = 'electric-piano-chords.mp3'
-  let music // to save audio element to access in another function
-  const samples = {
-    q: {offset: 12.673759298121675, duration: 1.4468085106382986, color: 'red'},
-    w: {offset: 20.58865291514295, duration: 1.4680864050033264, color: 'blue'},
-    e: {offset: 25.09929251163564, duration: 2.787234042553191, color: 'green'},
-    r: {offset: 25.09929251163564, duration: 2.787234042553191, color: 'yellow'}
+  /* global nn, Tone */
+  // const synth = new Tone.Synth().toDestination() // connects amp to destination, only plays one note at a time
+  const synth = new Tone.PolySynth().toDestination()
+  let keydown = false // to manual control the behavior of keydown
+  const scale = nn.createScale('C4', 'major')
+  const chord = nn.createChord(scale, 'triad') // 1, 3, 5 
+  let step = 0
+  function startPlaying() {
+    console.log(nn.notes) // gives us the notes
+    if (!keydown){
+      // const scale = nn.createScale('C4', 'minor')
+      // console.log(scale)
+      // const ran = nn.random(scale)
+      const next = scale[step]
+      // synth.triggerAttack(next) // keydown
+      synth.triggerAttack(chord) // keydown
+      // 440 is a note, C#2 is C-Sharp
+      keydown = true
+      step++
+      if (step >= scale.length) step = 0
+    }
+    // lowest frequency is 20, highest is 20,000
   }
-  // function animate() {
-  //   requestAnimationFrame(animate)
-  //   // console.log(music.currentTime) // goes by second
-  //   // console.log(music.volume) // goes from 0 to 1
-  // }
-  
-  
-  
-  // gives us a random volume and random time
-  async function remix() {
-    music.volume = nn.random(0.25, 0.5) // so not so loud but not quiet
-    music.currentTime = nn.random(0, music.duration) // moves to a certain time in audio element
-    const time = nn.random(250, 500) 
-    nn.get('body').css('background', nn.randomColor())
-    await nn.sleep(500)
-    remix()
+  function stopPlaying() {
+    synth.triggerRelease() // keyup, if using polysynth need to specify what to release
+    keydown = false
   }
-  
-  // function play () {
-  //   music.play()
-  // } for click
-  
-  // to play with pitch
-  // function play(){
-  //   music.preservesPitch = false // to turn the pitch down
-  //   music.playbackRate = 0.5 // slowed down but computer does math to make pitch stays the same
-  //   music.play()
-  // }
-  
-  async function play(e) {
-    const s = samples[e.key]
-    nn.get('body').css('background', s.color)
-    music.currentTime = s.offset // will jump to part of the audio clip
-    music.play()
-    await nn.sleep(s.duration * 1000) // will get a millsecond from the second that is duration
-    music.pause()
-  }
-  
-  function setup() {
-    music = nn.create('audio')
-      .set({
-        src: filename,
-        // controls: true, // shows audio bar, can press play to play but let's hide this
-        loop: true
-      })
-      .addTo('body')
-      // .on('loadeddata', remix) // waits for data to load we need this
-    // .on('loadeddata', () => music.play()) // play music without control
-  }
-  
-  nn.on('load', setup)
-  // nn.on('click', play)
-  // nn.on('load', animate)
-  nn.on('keydown', play)
-  // if you want to work on mobile phone use the mobile events as well
+
+  nn.on('keydown', startPlaying)
+  nn.on('keyup', stopPlaying)
 
 </script>
+
+
+
+
+
+
+
+
+
+
